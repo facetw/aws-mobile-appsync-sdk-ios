@@ -16,7 +16,7 @@
 import XCTest
 @testable import AWSAppSync
 
-@available(*, deprecated, message: "To be removed when we remove AWSAppSYncClientInfo")
+@available(*, deprecated, message: "To be removed when we remove AWSAppSyncClientInfo")
 class AWSAppSyncClientInfoTests: XCTestCase {
 
     func testCanLoadFromDefaultConfigSection() {

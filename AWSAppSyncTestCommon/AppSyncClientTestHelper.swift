@@ -19,14 +19,29 @@ internal class DeinitNotifiableAppSyncClient: AWSAppSyncClient {
     }
 }
 
-internal class AppSyncClientTestHelper: NSObject {
-    enum TestHelperError: Error {
+public class AppSyncClientTestHelper: NSObject {
+    public enum TestHelperError: Error, LocalizedError {
         case apolloError(String)
         case invalidAuthenticationType
         case setupError(String)
+
+        public var errorDescription: String? {
+            return localizedDescription
+        }
+
+        public var localizedDescription: String {
+            switch self {
+            case .apolloError(let message):
+                return message
+            case .invalidAuthenticationType:
+                return "Invalid authentication type"
+            case .setupError(let message):
+                return message
+            }
+        }
     }
 
-    enum AuthenticationType {
+    public enum AuthenticationType {
         case apiKey
         case cognitoIdentityPools
         case invalidAPIKey
@@ -48,9 +63,9 @@ internal class AppSyncClientTestHelper: NSObject {
        "AppSyncAPIKey": "da2-sad3lkh23422"
     }
 
-    The test uses 2 different backend setups for tests.
-        - the events starter schema with AWS_IAM(Cognito Identity) auth which can be created from AWSAppSync Console.
-        - the events starter schema with API_KEY auth which can be created from AWSAppSyncConsole.
+    The test uses 2 different backend setups (one for IAM (Cognito Identity) auth, and one for API Key
+    auth) for tests, which are created by importing the CloudFormation template
+    `ConsoleResources/appsync-functionaltests-cloudformation.yaml` into the AWS CloudFormation Console.
     """
 
     let appSyncClient: DeinitNotifiableAppSyncClient
@@ -62,7 +77,7 @@ internal class AppSyncClientTestHelper: NSObject {
     ///     For tests where there are no network calls, use `.apiKey`
     ///   - testConfiguration: an optional test configuration to use for setting up the client. If the test helper is being
     ///     created for unit testing, use AppSyncClientTestConfiguration.UnitTestConfiguration. If nil, init will attempt to
-    ///     create a configuration using the `appsync_test_credentials.json` file in the test bundle. If that file is not
+    ///     create a configuration using the `appsync_test_credentials.json` file in the `testBundle`. If that file is not
     ///     present, it will use the values stored in `AppSyncClientTestConfigurationDefaults`, which must be updated to have
     ///     valid values.
     ///   - databaseURL: a URL to store the cache database, nor `nil` if the database should be in memory
@@ -76,12 +91,12 @@ internal class AppSyncClientTestHelper: NSObject {
          testConfiguration: AppSyncClientTestConfiguration? = nil,
          databaseURL: URL? = nil,
          httpTransport: AWSNetworkTransport? = nil,
-         s3ObjectManager: AWSS3ObjectManager? = nil) throws {
+         s3ObjectManager: AWSS3ObjectManager? = nil,
+         testBundle: Bundle = Bundle(for: AppSyncClientTestHelper.self)) throws {
 
-        // Read credentials from appsync_test_credentials.json
-        let testBundle = Bundle(for: AppSyncClientTestHelper.self)
-        let testConfiguration = AppSyncClientTestConfiguration(with: testBundle) ?? AppSyncClientTestConfiguration()
-        guard testConfiguration.isValid else {
+        // Read credentials from appsync_test_credentials.json or hardcoded values
+        let resolvedTestConfiguration = testConfiguration ?? AppSyncClientTestConfiguration(with: testBundle) ?? AppSyncClientTestConfiguration()
+        guard resolvedTestConfiguration.isValid else {
             throw TestHelperError.setupError(AppSyncClientTestHelper.testSetupErrorMessage)
         }
 
@@ -90,7 +105,7 @@ internal class AppSyncClientTestHelper: NSObject {
 
         let appSyncConfig = try AppSyncClientTestHelper.makeAppSyncConfiguration(
             for: authenticationType,
-            testConfiguration: testConfiguration,
+            testConfiguration: resolvedTestConfiguration,
             databaseURL: databaseURL,
             httpTransport: httpTransport,
             s3ObjectManager: s3ObjectManager
@@ -122,7 +137,8 @@ internal class AppSyncClientTestHelper: NSObject {
                 url: testConfiguration.apiKeyEndpointURL,
                 serviceRegion: testConfiguration.apiKeyEndpointRegion,
                 apiKeyAuthProvider: apiKeyAuthProvider,
-                databaseURL: databaseURL
+                databaseURL: databaseURL,
+                s3ObjectManager: s3ObjectManager
             )
 
         case .cognitoIdentityPools:
@@ -131,7 +147,8 @@ internal class AppSyncClientTestHelper: NSObject {
                 url: testConfiguration.cognitoPoolEndpointURL,
                 serviceRegion: testConfiguration.cognitoPoolEndpointRegion,
                 credentialsProvider: credentialsProvider,
-                databaseURL: databaseURL
+                databaseURL: databaseURL,
+                s3ObjectManager: s3ObjectManager
             )
 
         case .invalidAPIKey:
@@ -140,7 +157,8 @@ internal class AppSyncClientTestHelper: NSObject {
                 url: testConfiguration.apiKeyEndpointURL,
                 serviceRegion: testConfiguration.apiKeyEndpointRegion,
                 apiKeyAuthProvider: apiKeyAuthProvider,
-                databaseURL: databaseURL
+                databaseURL: databaseURL,
+                s3ObjectManager: s3ObjectManager
             )
 
         case .invalidOIDC:
@@ -149,7 +167,8 @@ internal class AppSyncClientTestHelper: NSObject {
                 url: testConfiguration.apiKeyEndpointURL,
                 serviceRegion: testConfiguration.apiKeyEndpointRegion,
                 oidcAuthProvider: oidcAuthProvider,
-                databaseURL: databaseURL
+                databaseURL: databaseURL,
+                s3ObjectManager: s3ObjectManager
             )
 
         case .invalidStaticCredentials:
@@ -158,7 +177,8 @@ internal class AppSyncClientTestHelper: NSObject {
                 url: testConfiguration.apiKeyEndpointURL,
                 serviceRegion: testConfiguration.apiKeyEndpointRegion,
                 credentialsProvider: credentialsProvider,
-                databaseURL: databaseURL
+                databaseURL: databaseURL,
+                s3ObjectManager: s3ObjectManager
             )
 
         }

@@ -29,8 +29,16 @@ struct AppSyncClientTestConfiguration {
         static let cognitoPoolEndpointRegion = "AppSyncRegion"
     }
 
+    /// Returns a configuration with bogus values to be used for unit testing. This will validate, but not contain valid
+    /// information for network or service connections.
     static let UnitTestingConfiguration: AppSyncClientTestConfiguration = {
-        return AppSyncClientTestConfiguration(forUnitTesting: true)
+        return AppSyncClientTestConfiguration(apiKey: "FOR_UNIT_TESTING",
+                                              apiKeyEndpointURL: URL(string: "http://www.amazon.com/for_unit_testing")!,
+                                              apiKeyEndpointRegion: .USEast1,
+                                              cognitoPoolId: "FOR_UNIT_TESTING",
+                                              cognitoPoolRegion: .USEast1,
+                                              cognitoPoolEndpointURL: URL(string: "http://www.amazon.com/for_unit_testing")!,
+                                              cognitoPoolEndpointRegion: .USEast1)
     }()
 
     let apiKey: String
@@ -50,14 +58,13 @@ struct AppSyncClientTestConfiguration {
     }
 
     init() {
-        apiKey = AppSyncClientTestConfigurationDefaults.apiKey
-        apiKeyEndpointURL = AppSyncClientTestConfigurationDefaults.apiKeyEndpointURL
-        apiKeyEndpointRegion = AppSyncClientTestConfigurationDefaults.apiKeyEndpointRegion
-
-        cognitoPoolId = AppSyncClientTestConfigurationDefaults.cognitoPoolId
-        cognitoPoolRegion = AppSyncClientTestConfigurationDefaults.cognitoPoolRegion
-        cognitoPoolEndpointURL = AppSyncClientTestConfigurationDefaults.cognitoPoolEndpointURL
-        cognitoPoolEndpointRegion = AppSyncClientTestConfigurationDefaults.cognitoPoolEndpointRegion
+        self.init(apiKey: AppSyncClientTestConfigurationDefaults.apiKey,
+                  apiKeyEndpointURL: AppSyncClientTestConfigurationDefaults.apiKeyEndpointURL,
+                  apiKeyEndpointRegion: AppSyncClientTestConfigurationDefaults.apiKeyEndpointRegion,
+                  cognitoPoolId: AppSyncClientTestConfigurationDefaults.cognitoPoolId,
+                  cognitoPoolRegion: AppSyncClientTestConfigurationDefaults.cognitoPoolRegion,
+                  cognitoPoolEndpointURL: AppSyncClientTestConfigurationDefaults.cognitoPoolEndpointURL,
+                  cognitoPoolEndpointRegion: AppSyncClientTestConfigurationDefaults.cognitoPoolEndpointRegion)
     }
 
     init?(with bundle: Bundle) {
@@ -115,18 +122,20 @@ struct AppSyncClientTestConfiguration {
         self.cognitoPoolEndpointRegion = cognitoPoolEndpointRegionString.aws_regionTypeValue()
     }
 
-
-    /// Creates a configuration with bogus values to be used for unit testing. This will validate, but not contain valid
-    /// information for network or service connections.
-    ///
-    /// - Parameter forUnitTesting: Boolean, ignored
-    private init(forUnitTesting: Bool) {
-        apiKey = "FOR_UNIT_TESTING"
-        apiKeyEndpointURL = URL(string: "http://www.amazon.com/for_unit_testing")!
-        apiKeyEndpointRegion = .USEast1
-        cognitoPoolId = "FOR_UNIT_TESTING"
-        cognitoPoolRegion = .USEast1
-        cognitoPoolEndpointURL = URL(string: "http://www.amazon.com/for_unit_testing")!
-        cognitoPoolEndpointRegion = .USEast1
+    private init(apiKey: String,
+                 apiKeyEndpointURL: URL,
+                 apiKeyEndpointRegion: AWSRegionType,
+                 cognitoPoolId: String,
+                 cognitoPoolRegion: AWSRegionType,
+                 cognitoPoolEndpointURL: URL,
+                 cognitoPoolEndpointRegion: AWSRegionType) {
+        self.apiKey = apiKey
+        self.apiKeyEndpointURL = apiKeyEndpointURL
+        self.apiKeyEndpointRegion = apiKeyEndpointRegion
+        self.cognitoPoolId = cognitoPoolId
+        self.cognitoPoolRegion = cognitoPoolRegion
+        self.cognitoPoolEndpointURL = cognitoPoolEndpointURL
+        self.cognitoPoolEndpointRegion = cognitoPoolEndpointRegion
     }
+
 }

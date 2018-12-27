@@ -14,6 +14,7 @@
 //
 
 import XCTest
+@testable import AWSAppSyncTestCommon
 @testable import AWSAppSync
 
 class AWSAppSyncClientConfigurationTests: XCTestCase {

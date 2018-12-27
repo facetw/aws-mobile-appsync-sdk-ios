@@ -6,46 +6,10 @@
 //  Copyright © 2018 Amazon Web Services. All rights reserved.
 //
 
-import Foundation
 import XCTest
-@testable import AWSAppSync
 
-class MockSubscriptionWatcher: MQTTSubscriptionWatcher {
-    func connectedCallbackDelegate() {
-        
-    }
-    
-    let identifier: Int
-    let topics: [String]
-    let messageCallbackBlock: ((Data) -> Void)?
-    let disconnectCallbackBlock: ((Error) -> Void)?
-    let deallocBlock: ((MQTTSubscriptionWatcher) -> Void)?
-    
-    init(topics: [String], deallocBlock:((MQTTSubscriptionWatcher) -> Void)? = nil, messageCallbackBlock:((Data) -> Void)? = nil, disconnectCallbackBlock:((Error) -> Void)? = nil) {
-        self.identifier = NSUUID().hash
-        self.topics = topics
-        self.deallocBlock = deallocBlock
-        self.messageCallbackBlock = messageCallbackBlock
-        self.disconnectCallbackBlock = disconnectCallbackBlock
-    }
-    
-    deinit {
-        self.deallocBlock?(self)
-    }
-    
-    func getIdentifier() -> Int {
-        return self.identifier
-    }
-    func getTopics() -> [String] {
-        return self.topics
-    }
-    func messageCallbackDelegate(data: Data) {
-        self.messageCallbackBlock?(data)
-    }
-    func disconnectCallbackDelegate(error: Error) {
-        self.disconnectCallbackBlock?(error)
-    }
-}
+@testable import AWSAppSync
+@testable import AWSAppSyncTestCommon
 
 class AppSyncMQTTClientTests: XCTestCase {
     
@@ -103,7 +67,7 @@ class AppSyncMQTTClientTests: XCTestCase {
         let allTopics = [watcher0.getTopics(), watcher1.getTopics()].flatMap({ $0 })
         client.addWatcher(watcher: watcher1, topics: watcher1.getTopics(), identifier: watcher1.getIdentifier())
         client.startSubscriptions(subscriptionInfo: [AWSSubscriptionInfo(clientId: "1", url: "url", topics: allTopics)], identifier: "1")
-            
+
         wait(for: [expectation], timeout: 2)
     }
     

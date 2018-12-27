@@ -13,9 +13,7 @@
 // permissions and limitations under the License.
 //
 
-struct DefaultEventTestData {
-    static let EventName = "Testing Event"
-    static let EventTime = "July 26 2018, 12:30"
-    static let EventLocation = "Seattle, WA"
-    static let EventDescription = "Event Description"
-}
+import Foundation
+
+// Conform String to error module so we can easily use bare strings in Result failures
+extension String: Error {}

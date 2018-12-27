@@ -8,23 +8,64 @@
 
 import XCTest
 @testable import AWSAppSync
+@testable import AWSAppSyncTestCommon
+
+extension AWSS3ObjectProtocol {
+    var asCreatePostWithFileUsingInputTypeMutationFile: CreatePostWithFileUsingInputTypeMutation.Data.CreatePostWithFileUsingInputType.File {
+        let result = CreatePostWithFileUsingInputTypeMutation.Data.CreatePostWithFileUsingInputType.File(
+            bucket: getBucketName(),
+            key: getKeyName(),
+            region: getRegion()
+        )
+        return result
+    }
+
+    var asOnDeltaPostFile: OnDeltaPostSubscription.Data.OnDeltaPost.File {
+        let result = OnDeltaPostSubscription.Data.OnDeltaPost.File(
+            bucket: getBucketName(),
+            key: getKeyName(),
+            region: getRegion()
+        )
+        return result
+    }
+
+    var asUpdatePostWithFileUsingInputTypeMutationFile: UpdatePostWithFileUsingInputTypeMutation.Data.UpdatePostWithFileUsingInputType.File {
+        let result = UpdatePostWithFileUsingInputTypeMutation.Data.UpdatePostWithFileUsingInputType.File(
+            bucket: getBucketName(),
+            key: getKeyName(),
+            region: getRegion()
+        )
+        return result
+    }
+}
 
 class SubscriptionMessagesQueueTests: XCTestCase {
 
-    func makeComment(eventId: String, commentId: String) -> NewCommentOnEventSubscription.Data.SubscribeToEventComment {
-        let comment = NewCommentOnEventSubscription.Data.SubscribeToEventComment(
-            eventId: eventId,
-            commentId: commentId,
-            content: "Comment \(commentId)",
-            createdAt: Date().description
+    func makeSubscriptionResultItem(id: GraphQLID = UUID().uuidString,
+                                    author: String = "PostAuthor",
+                                    title: String = "",
+                                    content: String = "",
+                                    url: String = "",
+                                    ups: Int? = nil,
+                                    downs: Int? = nil,
+                                    file: S3Object? = nil,
+                                    createdDate: String? = nil,
+                                    awsDs: DeltaAction? = nil) -> GraphQLResult<OnDeltaPostSubscription.Data> {
+        let onDeltaPost = OnDeltaPostSubscription.Data.OnDeltaPost(
+            id: id,
+            author: author,
+            title: title,
+            content: content,
+            url: url,
+            ups: ups,
+            downs: downs,
+            file: file?.asOnDeltaPostFile,
+            createdDate: createdDate,
+            awsDs: awsDs
         )
-        return comment
-    }
 
-    func makeResultItem(eventId: String, commentId: String) -> GraphQLResult<NewCommentOnEventSubscription.Data> {
-        let comment = makeComment(eventId: eventId, commentId: commentId)
-        let data = NewCommentOnEventSubscription.Data(subscribeToEventComments: comment)
-        let result = GraphQLResult<NewCommentOnEventSubscription.Data>(
+        let data = OnDeltaPostSubscription.Data(onDeltaPost: onDeltaPost)
+        let result = GraphQLResult<OnDeltaPostSubscription.Data>(
             data: data,
             errors: nil,
             source: .server,
@@ -37,13 +78,13 @@ class SubscriptionMessagesQueueTests: XCTestCase {
         let messageNotDelivered = expectation(description: "Message should not be delivered while queue is stopped")
         messageNotDelivered.isInverted = true
 
-        let messagesQueue = SubscriptionMessagesQueue<NewCommentOnEventSubscription>(for: "testOperation1") { (_, _, _) in
+        let messagesQueue = SubscriptionMessagesQueue<OnDeltaPostSubscription>(for: "testOperation1") { (_, _, _) in
             messageNotDelivered.fulfill()
         }
 
         messagesQueue.stopDelivery()
 
-        let item = makeResultItem(eventId: "Item 1", commentId: "Comment 1")
+        let item = makeSubscriptionResultItem()
         messagesQueue.append(item, transaction: nil)
 
         wait(for: [messageNotDelivered], timeout: 1)
@@ -52,13 +93,13 @@ class SubscriptionMessagesQueueTests: XCTestCase {
     func test_itemAddedToStartedQueueIsDelivered() {
         let messageDelivered = expectation(description: "Message should be delivered while queue is started")
 
-        let messagesQueue = SubscriptionMessagesQueue<NewCommentOnEventSubscription>(for: "testOperation1") { (_, _, _) in
+        let messagesQueue = SubscriptionMessagesQueue<OnDeltaPostSubscription>(for: "testOperation1") { (_, _, _) in
             messageDelivered.fulfill()
         }
 
         messagesQueue.startDelivery()
 
-        let item = makeResultItem(eventId: "Item 1", commentId: "Comment 1")
+        let item = makeSubscriptionResultItem(id: "Item 1")
         messagesQueue.append(item, transaction: nil)
 
         wait(for: [messageDelivered], timeout: 1)
@@ -70,14 +111,14 @@ class SubscriptionMessagesQueueTests: XCTestCase {
 
         let messageDeliveredWhenQueueIsStarted = expectation(description: "Message should be delivered after queue is started")
 
-        let messagesQueue = SubscriptionMessagesQueue<NewCommentOnEventSubscription>(for: "testOperation1") { (_, _, _) in
+        let messagesQueue = SubscriptionMessagesQueue<OnDeltaPostSubscription>(for: "testOperation1") { (_, _, _) in
             messageNotDeliveredWhileQueueIsStopped.fulfill()
             messageDeliveredWhenQueueIsStarted.fulfill()
         }
 
         messagesQueue.stopDelivery()
 
-        let item = makeResultItem(eventId: "Item 1", commentId: "Comment 1")
+        let item = makeSubscriptionResultItem(id: "Item 1")
         messagesQueue.append(item, transaction: nil)
 
         wait(for: [messageNotDeliveredWhileQueueIsStopped], timeout: 1)
@@ -92,22 +133,22 @@ class SubscriptionMessagesQueueTests: XCTestCase {
     func test_canDrainLargeQueue() {
         var messageDeliveredExpectations = [XCTestExpectation]()
 
-        let messagesQueue = SubscriptionMessagesQueue<NewCommentOnEventSubscription>(for: "testOperation1") { (result, _, _) in
-            guard let eventId = result.data?.subscribeToEventComments?.eventId else {
-                XCTFail("EventId unexpectedly nil")
+        let messagesQueue = SubscriptionMessagesQueue<OnDeltaPostSubscription>(for: "testOperation1") { (result, _, _) in
+            guard let id = result.data?.onDeltaPost?.id else {
+                XCTFail("Id unexpectedly nil")
                 return
             }
 
-            let index = Int(eventId)!
+            let index = Int(id)!
             messageDeliveredExpectations[index].fulfill()
         }
 
         messagesQueue.stopDelivery()
 
-        // Note that the eventId is simply the string value of the index, to make it easier to assert which
+        // Note that the id is simply the string value of the index, to make it easier to assert which
         // expectation we need to fulfill
         for i in 0 ..< 5_000 {
-            let item = makeResultItem(eventId: "\(i)", commentId: "Comment \(i)")
+            let item = makeSubscriptionResultItem(id: "\(i)")
             messageDeliveredExpectations.append(expectation(description: "Delivered message \(i)"))
             messagesQueue.append(item, transaction: nil)
         }
@@ -123,13 +164,13 @@ class SubscriptionMessagesQueueTests: XCTestCase {
         var messageDeliveredInOrderExpectations = [XCTestExpectation]()
 
         var expectedIndex = 0
-        let messagesQueue = SubscriptionMessagesQueue<NewCommentOnEventSubscription>(for: "testOperation1") { (result, _, _) in
-            guard let eventId = result.data?.subscribeToEventComments?.eventId else {
-                XCTFail("EventId unexpectedly nil")
+        let messagesQueue = SubscriptionMessagesQueue<OnDeltaPostSubscription>(for: "testOperation1") { (result, _, _) in
+            guard let id = result.data?.onDeltaPost?.id else {
+                XCTFail("id unexpectedly nil")
                 return
             }
 
-            let index = Int(eventId)!
+            let index = Int(id)!
 
             if index == expectedIndex {
                 messageDeliveredInOrderExpectations[index].fulfill()
@@ -141,10 +182,10 @@ class SubscriptionMessagesQueueTests: XCTestCase {
 
         messagesQueue.stopDelivery()
 
-        // Note that the eventId is simply the string value of the index, to make it easier to assert which
+        // Note that the id is simply the string value of the index, to make it easier to assert which
         // expectation we need to fulfill
         for i in 0 ..< 50 {
-            let item = makeResultItem(eventId: "\(i)", commentId: "Comment \(i)")
+            let item = makeSubscriptionResultItem(id: "\(i)")
             messageDeliveredInOrderExpectations.append(expectation(description: "Result handler invoked in order for \(i)"))
             messagesQueue.append(item, transaction: nil)
         }
@@ -160,29 +201,29 @@ class SubscriptionMessagesQueueTests: XCTestCase {
     func test_itemAddedToDrainingQueueWillEventuallyBeDelivered() {
         var messageDeliveredExpectations = [XCTestExpectation]()
 
-        let messagesQueue = SubscriptionMessagesQueue<NewCommentOnEventSubscription>(for: "testOperation1") { (result, _, _) in
-            guard let eventId = result.data?.subscribeToEventComments?.eventId else {
-                XCTFail("EventId unexpectedly nil")
+        let messagesQueue = SubscriptionMessagesQueue<OnDeltaPostSubscription>(for: "testOperation1") { (result, _, _) in
+            guard let id = result.data?.onDeltaPost?.id else {
+                XCTFail("Id unexpectedly nil")
                 return
             }
 
-            let index = Int(eventId)!
+            let index = Int(id)!
             messageDeliveredExpectations[index].fulfill()
         }
 
         messagesQueue.stopDelivery()
 
-        // Note that the eventId is simply the string value of the index, to make it easier to assert which
+        // Note that the id is simply the string value of the index, to make it easier to assert which
         // expectation we need to fulfill
         for i in 0 ..< 5_000 {
-            let item = makeResultItem(eventId: "\(i)", commentId: "Comment \(i)")
+            let item = makeSubscriptionResultItem(id: "\(i)")
             messageDeliveredExpectations.append(expectation(description: "Delivered message \(i)"))
             messagesQueue.append(item, transaction: nil)
         }
 
         // Add the last expectation to be the item added while the queue is draining
         let expectationCount = messageDeliveredExpectations.count
-        let itemAddedWhileQueueIsDraining = makeResultItem(eventId: "\(expectationCount)", commentId: "This item was added while the queue was draining")
+        let itemAddedWhileQueueIsDraining = makeSubscriptionResultItem(id: "\(expectationCount)")
 
         let itemAddedWhileQueueIsDrainingShouldBeDelivered = expectation(description: "Item added while queue is draining should be delivered")
         messageDeliveredExpectations.append(itemAddedWhileQueueIsDrainingShouldBeDelivered)
