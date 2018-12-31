@@ -397,7 +397,6 @@
 		FA3E128021D5259800F2D19A /* AWSAppSyncClientConfigurationError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AWSAppSyncClientConfigurationError.swift; sourceTree = "<group>"; };
 		FA3E128221D5290900F2D19A /* AWSAppSyncClientInfoError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AWSAppSyncClientInfoError.swift; sourceTree = "<group>"; };
 		FA3E128421D5297500F2D19A /* AWSAppSyncServiceConfigError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AWSAppSyncServiceConfigError.swift; sourceTree = "<group>"; };
-		FA4F0D9C21D6F5930099D165 /* awsconfiguration.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = awsconfiguration.json; path = AWSAppSyncTestApp/awsconfiguration.json; sourceTree = "<group>"; };
 		FA51833021B849F900F9752A /* AppSyncClientTestHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSyncClientTestHelper.swift; sourceTree = "<group>"; };
 		FA51833221B867C900F9752A /* AppSyncClientTestConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSyncClientTestConfiguration.swift; sourceTree = "<group>"; };
 		FA72049E21CD9B9800938B81 /* AWSAppSyncClientInfoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AWSAppSyncClientInfoTests.swift; sourceTree = "<group>"; };
@@ -624,7 +623,6 @@
 		17DECF541F59F5FF004B0512 = {
 			isa = PBXGroup;
 			children = (
-				FA4F0D9C21D6F5930099D165 /* awsconfiguration.json */,
 				17DECF601F59F5FF004B0512 /* AWSAppSyncClient */,
 				FA8C62D521D6E59700FF9924 /* AWSAppSyncTestCommon */,
 				FA8C62B221D6E3AA00FF9924 /* AWSAppSyncUnitTests */,
