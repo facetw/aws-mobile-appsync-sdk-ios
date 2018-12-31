@@ -9,10 +9,10 @@
 import Foundation
 import AWSCore
 
-// Override these defaults if you are not using the `AppSyncTests/appsync_test_credentials.json` file to manage your
+// Override these defaults if you are not using the `AppSyncIntegrationTests/appsync_test_credentials.json` file to manage your
 // test client configuration.
 //
-// Note: You must either provide all values in the `AppSyncTests/appsync_test_credentials.json` or in this
+// Note: You must either provide all values in the `AppSyncIntegrationTests/appsync_test_credentials.json` or in this
 // structure. There is no mechanism to handle partial overrides of one source with the other. All values must be
 // specified before running the functional tests.
 struct AppSyncClientTestConfigurationDefaults {
