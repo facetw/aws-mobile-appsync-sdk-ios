@@ -579,6 +579,12 @@ public class AWSAppSyncClient {
                     guard let contentType = object["mimeType"] else { return nil }
                     guard let localUri = object["localUri"] else { return nil }
                     return (bucket, key, region, contentType, localUri)
+                } else {
+                    if let mapInValue = variables[key] as? GraphQLMapConvertible {
+                        if let s3Object = checkAndFetchS3Object(variables: mapInValue.graphQLMap) {
+                            return s3Object
+                        }
+                    }
                 }
             }
         }
