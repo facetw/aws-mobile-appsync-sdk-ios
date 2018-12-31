@@ -2,6 +2,17 @@
 
 The AWS AppSync SDK for iOS enables you to access your AWS AppSync backend and perform operations like `Queries`, `Mutations` and `Subscriptions`. The SDK also includes support for offline operations.
 
+## 2.8.1
+
+### Misc. Updates
+
+* Refactored structure & tests to make future maintenance easier. As part of this, we deprecated the `AWSAppSyncClientInfo` class in favor of the `AWSAppSyncServiceConfigProvider` protocol. We provide a default implementation `AWSAppSyncServiceConfig`. `AWSAppSyncClientInfo` will be removed in a future minor version.
+  - Thanks to @larryonoff for contributing code and PR feedback to this refactor! 🎉
+
+* Refactored tests into Unit and Integration tests. Currently, any test that requires network activity is placed in Integration tests, even if the test hits localhost and not a valid service.
+  - Updated the README to include new instructions for setting up your integration test environment.
+  - The project now includes an AWS CloudFormation template to bootstrap your test setups. This will be updated in the future to include S3 buckets and associated configuration to support complex object integration tests.
+
 ## 2.8.0
 
 ### Misc. Updates

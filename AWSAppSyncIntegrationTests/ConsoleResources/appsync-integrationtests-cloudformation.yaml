@@ -9,7 +9,7 @@ Parameters:
     AllowedValues:
     - ApiKey
     - IAM
-    Description: Enter 'API_KEY' or 'AWS_IAM' to create appropriate resources for testing.
+    Description: Choose 'ApiKey' or 'IAM' to create appropriate resources for testing.
 
   ResourceNamePrefix:
     Default: AppSyncTestYYYYMMDDHHMM
